@@ -8,7 +8,7 @@ draft: 1
 
 Agnostic Payments provides for secure payments across multiple assets on different ledgers. The architecture consists of a conceptual model for agnostic payments, a mechanism for securing payments. Colloquially, the whole Agnostic Payments stack is sometimes referred to as "APP".
 
-Agnostic Payments is not a blockchain, a token, nor a central service. Agnostic Payments is a standard way of bridging ledgers. The Agnostic Payments architecture is heavily inspired by the Interledger architecture described in [RFC 0001](https://github.com/interledger/rfcs/blob/main/0001-interledger-architecture/0001-interledger-architecture.md), [RFC 574](0034-connector-requirements/0034-connector-requirements.md) and [RFC 0015](https://github.com/interledger/rfcs/tree/main/0015-ilp-addresses).
+Agnostic Payments is not a blockchain, a token, nor a central service. Agnostic Payments is a standard way of bridging ledgers. The Agnostic Payments architecture is heavily inspired by the Interledger architecture described in [RFC 0001](https://github.com/interledger/rfcs/blob/main/0001-interledger-architecture/0001-interledger-architecture.md), [RFC 574](0034-connector-requirements/0034-connector-requirements.md) and [RFC 0015](https://github.com/interledger/rfcs/tree/main/0015-APP-addresses).
 
 ## Core Concepts
 
@@ -38,19 +38,16 @@ The Agnostic Payments Protocol (APP) is the core protocol of the entire Agnostic
 
 This level is concerned with currency amounts, routing, and whether each step in a payment arrives in time or expires. This protocol finds a path to connect a sender and receiver using any number of intermediaries.
 
-This layer abstracts the layers above and below it from one another, so there can be only one protocol at this layer. Other protocols, including older versions of the Agnostic Payments Protocol, are incompatible. The current protocol is defined by [IL-RFC-27: Agnostic Payments Protocol version 4](../0027-Agnostic Payments-protocol-4/0027-Agnostic Payments-protocol-4.md).
+This layer abstracts the layers above and below it from one another, so there can be only one protocol at this layer. Other protocols, including older versions of the Agnostic Payments Protocol, are incompatible. The current protocol is defined by [RFC-02: Agnostic Payments Protocol](../rfcs/agnostic-payments-protocol).
 
 #### Transport Protocols
 
 Transport layer protocols are used for **end-to-end communication** between sender and receiver; connectors are not expected to be involved. This layer is responsible for:
 
-- Defining the condition and fulfillment that are used on the Agnostic Payments Protocol layer
 - Grouping and retrying packets to achieve a desired outcome
 - Determining the effective exchange rate of a payment
 - Adapting to the speed at which packets can be sent, for what amounts
 - Encrypting and decrypting data
-
-For an example, see the STREAM protocol, defined by [IL-RFC-29: STREAM](../0029-stream/0029-stream.md). STREAM creates a bidirectional connection between a sender and receiver that consists of many individual Agnostic Payments packets.
 
 #### Application Protocols
 
@@ -60,35 +57,21 @@ Protocols on this layer are responsible for:
 
 1. Destination account discovery ("Where should the money be sent, exactly?")
 2. Destination amount negotiation ("Is it OK if this much arrives after fees and exchange rates?")
-3. Transport protocol selection and communication of associated details ("Are we using STREAM? What shared secret should we use?")
-4. Optionally, any other information that should be communicated in ILP packet data. ("Use this invoice identifier to credit the payment to your video subscription.")
-
-An example of an application layer protocol is the [Simple Payment Setup Protocol (SPSP)](../0009-simple-payment-setup-protocol/0009-simple-payment-setup-protocol.md), which communicates the destination ILP address and related details over HTTPS, and uses STREAM as the transport layer protocol.
-
-Many different messaging protocols can be defined on and above the Application level of the Agnostic Payments clearing system.
-
-#### Comparison to Traditional Financial Infrastructure
-
-The layers of Agnostic Payments are similar to the different layers of traditional inter-bank systems:
-
-- Agnostic Payments's _Application_ layer serves a similar purpose as _messaging_ in banking terms.
-- Agnostic Payments's _Transport_ and _Agnostic Payments_ layers combined are similar to a _clearing_ system in banking, though there are some differences. (For more details, see [IL-RFC-32: Peering, Clearing, and Settling](../0032-peering-clearing-settlement/0032-peering-clearing-settlement.md).)
-- Agnostic Payments's _Link protocols_ don't have a direct banking equivalent, but they provide authenticated messaging to enable the Agnostic Payments Protocol layer, and they also associate settlement events in the underlying ledgers to balances in the Agnostic Payments Protocol layer.
-- The underlying _Ledger_ systems are equivalent of _settlement_ in banking terms.
+3. Optionally, any other information that should be communicated in APP packet data. ("Use this invoice identifier to credit the payment to your video subscription.")
 
 ### Agnostic Payments Protocol Flow
 
-Agnostic Payments moves money by relaying _packets_. In the Agnostic Payments Protocol, a "prepare" packet represents a possible movement of some money and comes with a condition for releasing it. As the packet moves forward through the chain of connectors, the sender and connectors prepare balance changes for the accounts between them. The connectors also adjust the amount for any currency conversions and fees subtracted.
+Agnostic Payments moves money by relaying _packets_. In the Agnostic Payments Protocol, a "prepare" packet represents a possible movement of some money. As the packet moves forward through the chain of connectors, the sender and connectors prepare balance changes for the accounts between them. The connectors also adjust the amount for any currency conversions and fees subtracted.
 
 When the prepare packet arrives at the receiver, if the amount of money to be received is acceptable, the receiver fulfills the condition with a "fulfill" packet that confirms the balance change in the account between the last connector and the receiver. Connectors pass the "fulfill" packet back up the chain, confirming the planned balance changes along the way, until the sender's money has been paid to the first connector.
 
 ![Diagram: a prepare packet flows forward from Sender to Connector, to another Connector, to Receiver. A fulfill packet flows backward from Receiver to the second Connector, to the first Connector, to the Sender.](https://raw.githubusercontent.com/Agnostic-Payment-Protocol/rfcs/34c23ad3041b749f16d5088d79a2e2fcc6d47832/graphs/packet-flow-happy.svg)
 
-At any step along the way, a connector or the receiver can reject the payment, sending a "reject" packet back up the chain. This can happen if the receiver doesn't want the money, or a connector can't forward it. A prepared payment can also expire without the condition being fulfilled. In all these cases, no balances change.
+At any step along the way, a connector or the receiver can reject the payment, sending a "reject" packet back up the chain. This can happen if the receiver doesn't want the money, or a connector can't forward it. A prepared payment can also expire, in all these cases, no balances change.
 
 ![Diagram: a prepare packet flows forward from Sender to Connector, to another Connector, who rejects it. A reject packet flows backward from the second Connector to the first Connector, then to the Sender.](https://raw.githubusercontent.com/Agnostic-Payment-Protocol/rfcs/34c23ad3041b749f16d5088d79a2e2fcc6d47832/graphs/packet-flow-reject.svg)
 
-The flow is specified in detail in [IL-RFC-27: Agnostic Payments Protocol version 4](../0027-Agnostic Payments-protocol-4/0027-Agnostic Payments-protocol-4.md).
+The flow is specified in detail in [IL-RFC-27: Agnostic Payments Protocol version 4](../rfcs/agnostic-payments-protocol).
 
 #### Packetized Money
 
@@ -96,39 +79,26 @@ A packet does not have to represent the full amount of a real-world payment. _Tr
 
 - Small packets reduce the "free option problem" where senders can lock up connectors' funds, then either take the promised deal or not depending on whether exchange rates move in their favor.
 - Small packets involve small connectors (those with less funds available) in more transactions, and lower the barrier to entry for operating a connector, since moving less than the full amount of a payment can still be useful.
-- Small packets let participants settle their balances more often, so that the outstanding balance between two participants can remain low even when sending large payments.
 
 The Agnostic Payments Protocol does not have a specific definition of "small", nor a size limit on packets. Each connector can choose minimum and maximum packet sizes they are willing to relay; as a result, any path's maximum packet size is the smallest maximum packet size among the connectors in that path. To be compatible with as much of the network as possible, one should choose packet sizes that fit between the minimum and maximum values of as many connectors as possible.
 
 ### Addresses
 
-_Agnostic Payments addresses_ (also called _ILP addresses_) provide a universal way to address senders, receivers and connectors. These addresses are used in several different protocol layers, but their most important feature is to enable routing on the Interleder Protocol layer. Agnostic Payments addresses are hierarchical, dot-separated strings where the left-most segment is most significant. An example address might look like:
+_Agnostic Payments addresses_ (also called _APP addresses_) provide a universal way to address senders, receivers and connectors. These addresses are used in several different protocol layers, but their most important feature is to enable routing on the Interleder Protocol layer. Agnostic Payments addresses are hierarchical, dot-separated strings where the left-most segment is most significant. An example address might look like:
 `g.us.acmebank.acmecorp.sales.199` or `g.crypto.bitcoin.1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2`.
 
-For more information on the format of ILP addresses and how they apply to routing, see [IL-RFC-15: ILP Addresses](../0015-ilp-addresses/0015-ilp-addresses.md).
+For more information on the format of APP addresses and how they apply to routing, see [RFC-003: APP Addresses](../rfcs/app-addressses.md).
 
-If two parties in the Agnostic Payments have a "parent/child" connection rather than a peer-to-peer connection, the child can request an Agnostic Payments address that is under the parent's address in the hierarchy. For more information, see [IL-RFC-31: Agnostic Payments Dynamic Configuration Protocol (ILDCP)](../0031-dynamic-configuration-protocol/0031-dynamic-configuration-protocol.md).
+If two parties in the Agnostic Payments have a "parent/child" connection rather than a peer-to-peer connection, the child can request an Agnostic Payments address that is under the parent's address in the hierarchy. For more information, see [RFC-004: Agnostic Payments Dynamic Configuration Protocol (DCP)](../rfcs/0031-dynamic-configuration-protocol.md).
 
 ## Agnostic Payments Security
 
-**Agnostic Payments uses _conditional transfers_ to secure payments across multiple hops and even through untrusted connectors.** Everyone only needs to trust their direct peers, no matter how many connectors are involved in forwarding a given packet. Connectors take some risk, but this risk can be managed and is primarily based upon the connector's chosen peers.
-
-> **Hint:** Conditional transfers or _authorization holds_ are the financial equivalent of a [two-phase commit](http://foldoc.org/two-phase%20commit).
+**Agnostic Payments uses _smart contracts or canisters_ to secure payments across multiple hops.** Connectors take some risk, but this risk can be managed and is primarily based upon the connector's chosen peers.
 
 Because each party is isolated from risks beyond their immediate peers, longer paths are not inherently more risky than shorter paths. This enables longer paths to compete with shorter paths to convey money from any given sender to any given receiver, while reducing the risk to the sender.
-
-The original Agnostic Payments whitepaper presented an _atomic mode_ with a stronger guarantee of atomicity, but implementing atomic mode requires extra agreements that cannot be generalized to an open network. The specifications in the Agnostic Payments protocol are concerned with what the whitepaper calls _universal mode_.
-
-### Conditions and Fulfillments
-
-Agnostic Payments uses the digest of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash function as the condition for prepare packets. (This choice was inspired by the design of the [Lightning Network](http://lightning.network).) The fulfill packet contains a valid 32-byte preimage for the hash specified in the prepare packet. Connectors are responsible for validating fulfillments in the Agnostic Payments Protocol layer.
-
-The sender and receiver for a payment define the condition and fulfillment for each packet using a [Transport Layer](#transport-layer) protocol.
 
 ### Connector Risk and Mitigation
 
 Agnostic Payments connectors accept some risk in exchange for the revenue they generate from facilitating payments. In the Agnostic Payments payment flow, connectors incur outgoing obligations on the receiver-side account, before they become entitled to incoming obligations on the sender-side account. After each connector receives a `fulfill` packet, they have a window of time to deliver the `fulfill` packet to their counterparty on the sender-side account. Connectors that fail to deliver the `fulfill` packet in time may lose money.
 
-If some connectors in the path of an Agnostic Payments packet receive the `fulfill` packet in time and others don't, the receiver will know the packet was received but the sender will not know. Usually, a single Agnostic Payments packet is part of a larger transaction or payment stream, so the sender may find out what happened when they receive the response for the next packet. Senders MAY also retry packets that expire. The exact behavior of senders and receivers with respect to retries is defined by the transport layer. For an example, see [IL-RFC-29: STREAM](../0029-stream/0029-stream.md) for a description of the STREAM transport layer protocol.
-
-Failing to deliver the `fulfill` packet in time is the main risk connectors face and there are a number of additional strategies connectors should employ to mitigate and manage this risk. For more details, see [IL-RFC-18: Connector Risk Mitigations](../0018-connector-risk-mitigations/0018-connector-risk-mitigations.md).
+If some connectors in the path of an Agnostic Payments packet receive the `fulfill` packet in time and others don't, the receiver will know the packet was received but the sender will not know. Usually, a single Agnostic Payments packet is part of a larger transaction or payment stream, so the sender may find out what happened when they receive the response for the next packet. Senders MAY also retry packets that expire.
