@@ -14,15 +14,13 @@ Agnostic Payments is not a blockchain, a token, nor a central service. Agnostic 
 
 ### The Agnostic Payments
 
-The "Agnostic Payments protocol suite" can be used among any network of participants, public or private. There is no single network that all parties must connect to to use these protocols.
-
-"The Agnostic Payments" is the name of a public instance of the Agnostic Payments protocol suite which seeks to provide a coherent global financial infrastructure. Ideally, anyone connected to the Agnostic Payments should be able to transact with anyone else, each using the underlying systems and currencies of their choice.
+The "Agnostic Payments protocol" can be used among any network of participants, public or private. There is no single network that all parties must connect to to use this protocol.
 
 ### Sender, Receiver, Connectors
 
 When two parties want to do business online, the one who sends money is the _sender_ and the one who gets money is the _receiver_. If the sender and the receiver don't have some monetary system in common, they need one or more parties to connect them. In the Agnostic Payments architecture, _connectors_ forward money through the network until it reaches the receiver.
 
-![Diagram showing Sender linked to two Connectors and a Receiver in a line](https://raw.githubusercontent.com/Agnostic Payments/rfcs/master/shared/graphs/Agnostic Payments-model.svg)
+![Diagram showing Sender linked to two Connectors and a Receiver in a line](https://raw.githubusercontent.com/Agnostic-Payment-Protocol/rfcs/34c23ad3041b749f16d5088d79a2e2fcc6d47832/graphs/interledger-model.svg)
 
 Within these specifications, we use _node_ as a general term for any participant in the Agnostic Payments. A node may be a sender, a receiver, or a connector. The node may represent a person or business, or perhaps a single device or software program. In the case where a node represents a device or software program, the node is usually connected to another node that represents the device's owner or the person running the software.
 
@@ -30,50 +28,15 @@ You can envision the Agnostic Payments as a graph where the points are individua
 
 Connectors provide a service of forwarding packets and relaying money, and they take on some risk when they do so. In exchange, connectors can charge fees and derive a profit from these services. In the open network of the Agnostic Payments, connectors are expected to compete among one another to offer the best balance of speed, reliability, coverage, and cost.
 
-### Protocol Layers
-
-![Diagram of protocol suite: Application layer protocols like SPSP provide messaging, on top of Transport protocols like STREAM, which are on top of the Agnostic Payments Protocol ILPv4; the Link layer establishes secure communications between peers; below that, the Settlement layer is dependent on a variety of different ledgers and their native protocols.](https://raw.githubusercontent.com/Agnostic Payments/rfcs/master/shared/graphs/protocol-suite.svg)
-
-Like the Internet protocol stack that inspired it, the Agnostic Payments protocol suite is divided into layers of protocols with different responsibilities. Lower-level protocols provide basic functionality that higher-level protocols depend on to provide more complex functionality.
-
-> **Aside:** Not pictured in the diagram are configuration protocols including [IL-RFC-31: Agnostic Payments Dynamic Configuration Protocol](../0031-dynamic-configuration-protocol/0031-dynamic-configuration-protocol.md) and **Route Broadcasting Protocol**. These protocols are built on top of the Agnostic Payments Protocol layer and support it, but are not considered to be transport or application-layer protocols.
-
-The following sections describe the general functions of each layer in the protocol suite. For an alternate explanation with detailed depictions of the protocols' data formats, see [IL-RFC-33: Relationship Between Protocols](../0033-relationship-between-protocols/0033-relationship-between-protocols.md).
-
 #### Ledger Protocols
 
-The Agnostic Payments protocol suite sits atop a level which we call "ledger protocols". This level represents the existing money systems that Agnostic Payments connects. Even though they are not strictly part of the Agnostic Payments protocol suite, they are an indispensable part of the Agnostic Payments model.
-
-As payments flow between two nodes using the Agnostic Payments protocol, their obligations increase and occasionally offset one another. Before the outstanding balance reaches the limit of what the nodes are willing to sustain, they need to _settle_ those balances in some money system they have in common.
-
-For purposes of Agnostic Payments, we call all settlement systems _ledgers_. These can include banks, blockchains, peer-to-peer payment schemes, automated clearing house (ACH), mobile money institutions, central-bank operated real-time gross settlement (RTGS) systems, and even more.
-
-Thus, before doing business using Agnostic Payments, each pair of participants must choose a way to settle their obligations, and establish limits for how much money they are willing to be owed for how much time before settling. The details of this agreement do not matter to the rest of Agnostic Payments as long they hold to one rule:
-
-**Settlement for one account MUST NOT depend on the status of any other accounts.**
-
-If settlement of one account in the Agnostic Payments is contingent on the status of another account or relationship, this could create the threat of cascading risks and failures, similar to problems that occurred during the 2008 global financial crisis. Nodes can protect themselves from such risks by choosing to use settlement technologies such as collateralized payment channels where available. These types of arrangements can provide high-speed settlement without a risk that the other side may not pay. For more information on different ledger types and settlement strategies, see [IL-RFC-22: Hashed Timelock Agreements](../0022-hashed-timelock-agreements/0022-hashed-timelock-agreements.md).
-
-Nodes can also choose never to settle their obligations. This configuration may be useful when several nodes representing different pieces of software or devices are all owned by the same person or business, and all their traffic with the outside world goes through a single "home router" connector. This is the model of [moneyd](https://github.com/Agnostic Paymentsjs/moneyd), one of the current implementations of Agnostic Payments.
-
-Implementations of Agnostic Payments are recommended to use settlement engines as defined in [IL-RFC-00: Settlement Engines](../0038-settlement-engines/0038-settlement-engines.md) to settle obligations automatically while abstracting the differences between different settlement systems and ledgers.
-
-#### Link Protocols
-
-Peers in the Agnostic Payments Protocol require a way to communicate securely with one another. Since most existing ledgers do not implement two-way authenticated communication between account holders, we need Link protocols to provide this functionality. Link protocols generally convey two types of information:
-
-- Packets of Agnostic Payments Protocol data.
-- Information on the settling of outstanding balances.
-
-[IL-RFC-23: Bilateral Transfer Protocol](../0023-bilateral-transfer-protocol/0023-bilateral-transfer-protocol.md) defines a link-layer protocol that communicates this information over [WebSocket](https://tools.ietf.org/html/rfc6455) and is compatible with a wide range of underlying ledgers.
-
-The implementation of a Link protocol may be incorporated into a ledger plugin, since the Link protocol has to communicate settlements that occur in the underlying ledger.
+The Agnostic Payments protocol sits atop a level which we call "ledger protocols". This level represents the existing money systems that Agnostic Payments connects. Even though they are not strictly part of the Agnostic Payments protocol, they are an indispensable part of the Agnostic Payments model.
 
 #### Agnostic Payments Protocol
 
-The Agnostic Payments Protocol version 4 (ILPv4) is the core protocol of the entire Agnostic Payments Protocol suite. This protocol's packets pass through all participants in the chain: from the sender, through one or more connectors, to the receiver. This protocol is compatible with any variety of currencies and underlying ledger systems.
+The Agnostic Payments Protocol (APP) is the core protocol of the entire Agnostic Payments Protocol. This protocol's packets pass through all participants in the chain: from the sender, through one or more connectors, to the receiver. This protocol is compatible with any variety of currencies and underlying ledger systems.
 
-This level is concerned with currency amounts, routing, and whether each step in a payment arrives in time or expires. This protocol finds a path to connect a sender and receiver using any number of intermediaries. The packets that are relayed across this path contain a cryptographic _condition_ whose _fulfillment_ is only known to the recipient (and possibly the sender). If everything goes well and the receiver wants the funds, the receiver provides the fulfillment, which triggers the funds to move at each account in the path. In this way, the fulfillment proves that the money was delivered to the intended recipient.
+This level is concerned with currency amounts, routing, and whether each step in a payment arrives in time or expires. This protocol finds a path to connect a sender and receiver using any number of intermediaries.
 
 This layer abstracts the layers above and below it from one another, so there can be only one protocol at this layer. Other protocols, including older versions of the Agnostic Payments Protocol, are incompatible. The current protocol is defined by [IL-RFC-27: Agnostic Payments Protocol version 4](../0027-Agnostic Payments-protocol-4/0027-Agnostic Payments-protocol-4.md).
 
@@ -119,11 +82,11 @@ Agnostic Payments moves money by relaying _packets_. In the Agnostic Payments Pr
 
 When the prepare packet arrives at the receiver, if the amount of money to be received is acceptable, the receiver fulfills the condition with a "fulfill" packet that confirms the balance change in the account between the last connector and the receiver. Connectors pass the "fulfill" packet back up the chain, confirming the planned balance changes along the way, until the sender's money has been paid to the first connector.
 
-![Diagram: a prepare packet flows forward from Sender to Connector, to another Connector, to Receiver. A fulfill packet flows backward from Receiver to the second Connector, to the first Connector, to the Sender.](https://raw.githubusercontent.com/Agnostic Payments/rfcs/master/shared/graphs/packet-flow-happy.svg)
+![Diagram: a prepare packet flows forward from Sender to Connector, to another Connector, to Receiver. A fulfill packet flows backward from Receiver to the second Connector, to the first Connector, to the Sender.](https://raw.githubusercontent.com/Agnostic-Payment-Protocol/rfcs/34c23ad3041b749f16d5088d79a2e2fcc6d47832/graphs/packet-flow-happy.svg)
 
 At any step along the way, a connector or the receiver can reject the payment, sending a "reject" packet back up the chain. This can happen if the receiver doesn't want the money, or a connector can't forward it. A prepared payment can also expire without the condition being fulfilled. In all these cases, no balances change.
 
-![Diagram: a prepare packet flows forward from Sender to Connector, to another Connector, who rejects it. A reject packet flows backward from the second Connector to the first Connector, then to the Sender.](https://raw.githubusercontent.com/Agnostic Payments/rfcs/master/shared/graphs/packet-flow-reject.svg)
+![Diagram: a prepare packet flows forward from Sender to Connector, to another Connector, who rejects it. A reject packet flows backward from the second Connector to the first Connector, then to the Sender.](https://raw.githubusercontent.com/Agnostic-Payment-Protocol/rfcs/34c23ad3041b749f16d5088d79a2e2fcc6d47832/graphs/packet-flow-reject.svg)
 
 The flow is specified in detail in [IL-RFC-27: Agnostic Payments Protocol version 4](../0027-Agnostic Payments-protocol-4/0027-Agnostic Payments-protocol-4.md).
 
@@ -154,7 +117,7 @@ If two parties in the Agnostic Payments have a "parent/child" connection rather 
 
 Because each party is isolated from risks beyond their immediate peers, longer paths are not inherently more risky than shorter paths. This enables longer paths to compete with shorter paths to convey money from any given sender to any given receiver, while reducing the risk to the sender.
 
-The original Agnostic Payments whitepaper presented an _atomic mode_ with a stronger guarantee of atomicity, but implementing atomic mode requires extra agreements that cannot be generalized to an open network. The specifications in the Agnostic Payments protocol suite are concerned with what the whitepaper calls _universal mode_.
+The original Agnostic Payments whitepaper presented an _atomic mode_ with a stronger guarantee of atomicity, but implementing atomic mode requires extra agreements that cannot be generalized to an open network. The specifications in the Agnostic Payments protocol are concerned with what the whitepaper calls _universal mode_.
 
 ### Conditions and Fulfillments
 
